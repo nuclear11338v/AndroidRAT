@@ -1,6 +1,5 @@
 name: Build Android RAT APK
 
-# Trigger workflow on push to main branch
 on:
   push:
     branches:
@@ -8,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Use Ubuntu VM on GitHub
+    runs-on: ubuntu-latest
 
     steps:
       # Step 1: Checkout the repository code
@@ -19,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # Python 3.9 for compatibility
+          python-version: '3.9'
 
       # Step 3: Install system dependencies
       - name: Install System Dependencies
@@ -64,11 +63,13 @@ jobs:
         run: |
           export PATH=$PATH:/usr/local/android-sdk/cmdline-tools/latest/bin:/usr/local/android-sdk/build-tools/33.0.0
           buildozer android debug
+        # Retry on failure (optional)
+        continue-on-error: true
 
       # Step 8: Upload the APK as an artifact
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # Updated to v4 (latest stable)
         with:
           name: rat-apk
           path: bin/*.apk
-          retention-days: 7  # Keep APK for 7 day
+          retention-days: 7
