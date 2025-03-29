@@ -1,16 +1,17 @@
 import os
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from pytgcalls import GroupCallFactory
+from pytgcalls import PyTgCalls
+from pytgcalls.types.input_stream import InputAudioStream
 
 # Telegram credentials
 API_ID = 27152769
 API_HASH = "b98dff566803b43b3c3120eec537fc1d"
 BOT_TOKEN = "7910848214:AAHVBM9OhbpsH8GPx3zDzHe3_OzLoOhg_sQ"
 
-# Bot aur GroupCall initialize karo
+# Bot aur Voice Chat client initialize karo
 app = Client("music_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
-group_call = GroupCallFactory(app).get_file_group_call()
+vc = PyTgCalls(app)  # PyTgCalls instance banao
 
 # Audio file jo play karna hai
 AUDIO_FILE = "audio.mp3"  # Apni audio file ka path daalo
@@ -32,8 +33,7 @@ async def play_command(client: Client, message: Message):
     
     # VC join karo aur play shuru karo
     try:
-        group_call.input_filename = AUDIO_FILE
-        await group_call.start(chat_id)
+        await vc.join_group_call(chat_id, InputAudioStream(AUDIO_FILE))
         await message.reply("Music play ho raha hai VC mein!")
     except Exception as e:
         await message.reply(f"Error: {str(e)}")
