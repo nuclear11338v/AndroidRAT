@@ -1,5 +1,6 @@
 import os
 from pyrogram import Client, filters
+from pyrogram.types import Message
 from pytgcalls import GroupCallFactory
 
 # Telegram credentials
@@ -16,12 +17,12 @@ AUDIO_FILE = "audio.mp3"  # Apni audio file ka path daalo
 
 # /start command
 @app.on_message(filters.command("start") & filters.private)
-async def start_command(client, message):
+async def start_command(client: Client, message: Message):
     await message.reply("Hello! Main ek VC music bot hoon. Group mein /play use karo!")
 
 # /play command - VC mein audio play karo
 @app.on_message(filters.command("play") & filters.group)
-async def play_command(client, message):
+async def play_command(client: Client, message: Message):
     chat_id = message.chat.id
     
     # Check if audio file exists
