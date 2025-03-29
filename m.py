@@ -2,7 +2,7 @@ import os
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pytgcalls import PyTgCalls
-from pytgcalls.types.input_stream import InputAudioStream
+from pytgcalls.types import StreamAudio
 
 # Telegram credentials
 API_ID = 27152769
@@ -11,10 +11,10 @@ BOT_TOKEN = "7910848214:AAHVBM9OhbpsH8GPx3zDzHe3_OzLoOhg_sQ"
 
 # Bot aur Voice Chat client initialize karo
 app = Client("music_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
-vc = PyTgCalls(app)  # PyTgCalls instance banao
+vc = PyTgCalls(app)  # PyTgCalls instance
 
 # Audio file jo play karna hai
-AUDIO_FILE = "audio.mp3"  # Apni audio file ka path daalo
+AUDIO_FILE = "audio.mp3"
 
 # /start command
 @app.on_message(filters.command("start") & filters.private)
@@ -26,14 +26,12 @@ async def start_command(client: Client, message: Message):
 async def play_command(client: Client, message: Message):
     chat_id = message.chat.id
     
-    # Check if audio file exists
     if not os.path.exists(AUDIO_FILE):
         await message.reply("Audio file nahi mili!")
         return
     
-    # VC join karo aur play shuru karo
     try:
-        await vc.join_group_call(chat_id, InputAudioStream(AUDIO_FILE))
+        await vc.join_group_call(chat_id, StreamAudio(AUDIO_FILE))
         await message.reply("Music play ho raha hai VC mein!")
     except Exception as e:
         await message.reply(f"Error: {str(e)}")
